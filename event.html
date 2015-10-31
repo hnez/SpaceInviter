@@ -11,7 +11,7 @@
     <div id="center">
       <h1 id="headline">Space Inviter</h1>
 
-      <div id="dguesttab">
+      <div id="dguesttab" class="framed">
         <table id="guesttab">
           <tr>
             <th>Name</th>
@@ -22,17 +22,18 @@
         </table>
       </div>
 
-      <div id="dhistogram">
+      <div id="dhistogram" class="framed">
         <svg id="histogram">
         </svg>
       </div>
 
-      <div id="dguestpanel">
+      <div id="dguestpanel" class="framed">
         <table>
           <tr>
             <th>Name</th>
             <th>Propability</th>
             <th>Apply</th>
+            <th class="admin">New</th>
           </tr>
           <tr>
             <td>
@@ -50,21 +51,24 @@
               </select>
             </td>
             <td>
-              <button onclick="editGuest()">
+              <button id="guestsend" onclick="editGuest()">
                 Send
+              </button>
+            </td>
+            <td>
+              <button id="guestadd" class="admin" onclick="addGuest()">
+                Add Guest
               </button>
             </td>
           </tr>
         </table>
-
-        <button class="admin" onclick="addGuest()">
-          Add Guest
-        </button>
       </div>
       
-      <div id="dadminpanel" class="admin">
+      <div id="dadminpanel" class="admin framed">
         <input id="eventnamein" type="text"/>
-        <button onclick="editEvent()"/>
+        <button id="eventsend" onclick="editEvent()">
+          Send
+        </button>
       </div>
     </div>
   </body>

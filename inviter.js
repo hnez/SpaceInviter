@@ -76,16 +76,71 @@ function loadEvent ()
 
 function editGuest()
 {
+    var command= {};
+    var namefield= document.getElementById("guestnamein");
+    var propfield= document.getElementById("guestpropin");
+    var gtoken= guest["token"]
+    
+    command["name"]= namefield.value;
+    command["parprop"]= parseInt(propfield.value);
+
+    var req= new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        // TODO: everything
+    }
+
+    req.open("PUT", "/api/guest/" + gtoken, true);
+    req.setRequestHeader ('Content-Type', 'application/json');
+    req.send(JSON.stringify(command))
 }
 
 function addGuest()
 {
+    var command= {};
+    command["event"]= event["token"]
+    command["auth"]= guest["token"]
+    
+    var req= new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        // TODO: everything
+    }
+
+    req.open("POST", "/api/guest", true);
+    req.setRequestHeader ('Content-Type', 'application/json');
+    req.send(JSON.stringify(command))
 }
 
 function editEvent()
 {
+    var command= {};
+    command["event"]= event["token"]
+    command["auth"]= guest["token"]
+
+    var etoken= event["token"]
+    var namefield= document.getElementById("eventnamein");
+    
+    command["name"]= namefield.value
+    
+    var req= new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        // TODO: everything
+    }
+
+    req.open("PUT", "/api/event/" + etoken, true);
+    req.setRequestHeader ('Content-Type', 'application/json');
+    req.send(JSON.stringify(command))
 }
 
 function newEvent()
 {
+    var command= {};
+    
+    var req= new XMLHttpRequest();
+    req.onreadystatechange = function () {
+        // TODO: everything
+    }
+
+    req.open("POST", "/api/guest", true);
+    req.setRequestHeader ('Content-Type', 'application/json');
+    req.send(JSON.stringify(command))
 }

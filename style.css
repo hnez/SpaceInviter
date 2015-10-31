@@ -1,0 +1,106 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #171717;
+}
+
+table {
+    width: 100%;
+}
+
+th {
+    text-align: left;
+    font-weight: normal;
+    text-decoration: underline;
+}
+
+div#center {
+    max-width: 50em;
+    min-height: 15em;
+    margin: 1em auto;
+    background-color: #DEDEDE;
+    padding: 2em;
+    border-radius: 0.2em;
+    box-shadow: 0 0 1em black;
+}
+
+div.framed {
+    background-color: #CECECE;
+    padding: 0.3em;
+    border-radius: 0.2em;
+    box-shadow: 0 0 0.1em rgba(0, 0, 0, 0.34);
+    margin: 0.5em;
+}
+
+input#eventnamein,
+input#guestnamein {
+    border: none;
+    padding: 0.2em;
+    border-radius: 0.2em;
+    background-color: #F0F0F0;
+    box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.6);
+    width: 100%;
+    margin: 0.1em;
+}
+
+input#eventnamein {
+    width: 80%;
+}
+
+button#eventsend {
+    width: 18%;
+}              
+
+button#guestadd,
+button#guestsend {
+    width: 100%;
+}
+
+svg#histogram {
+    height: 8em;
+    width: 100%;
+}
+
+button#eventadd {
+    margin: 4em auto;
+    width: 10em;
+    height: 2em;
+    font-size: 1.5em;
+    box-shadow: 0px 0px 1em rgba(0, 0, 0, 0.23);
+    display: block;
+    background: linear-gradient(rgb(173, 255, 171), rgb(152, 248, 122));
+    color: rgb(83, 83, 83);
+    font-weight: bold;
+}
+
+button#eventadd:hover{
+    background: linear-gradient(rgb(152, 248, 122), rgb(173, 255, 171));
+}
+
+button {
+    border:none;
+    text-align: center;
+    padding: 0.2em;
+    border-radius: 0.2em;
+    box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.6);
+}
+
+select#guestpropin {
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 0.5em;
+    color: #383838;
+    font-size: 2.3em;
+}
+
+.admin {
+//    display: none;
+}
+                 
