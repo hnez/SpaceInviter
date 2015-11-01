@@ -1,30 +1,25 @@
 var event={}
 var guest={}
 
-function binomialDist(num, prop)
+function convDist(props)
 {
-  function binomialCoef (n,k) {
-    its++;
-    if (k==0 || n==k) return 1;
+  var dist=[1];
 
-    return (binomialCoef(n-1,k-1) + binomialCoef(n-1,k));
+  for (i=0;i<props.length;i++) {
+    var cur=[];
+
+    for(j=0;j<=dist.length;j++) {
+      cur[j]= (j>=1 ? dist[j-1] : 0)*props[i]
+        +(j<dist.length ? dist[j] : 0)*(1-props[i]);
+    }
+
+    dist=cur;
   }
 
-  var res=[];
-
-  for (var i=0; i<=num; i++) {
-    var tmp=1;
-    tmp*= binomialCoef(num, i);
-    tmp*= Math.pow(prop, i);
-    tmp*= Math.pow(1-prop, num-i);
-
-    res[i]=tmp;
-  }
-
-  return (res)
+  return (dist);
 }
 
-function genDistSVG (num, prop)
+function genDistSVG (props)
 {
   var ns= 'http://www.w3.org/2000/svg'
 
@@ -64,7 +59,8 @@ function genDistSVG (num, prop)
   svg.appendChild(line(2, 10,  2, 90, 'grey'));
   svg.appendChild(line(2, 90, 98, 90, 'grey'));
 
-  var dist= binomialDist(num, prop);
+  var dist= convDist(props);
+  var num= props.length;
   var maxp=0;
 
   for (var i=0; i<=num; i++) {
@@ -95,6 +91,14 @@ function genDistSVG (num, prop)
   return (svg)
 }
 
+function updateHistogram (props)
+{
+  var div= document.getElementById('dhistogram');
+  var svg= genDistSVG(props);
+  
+  div.replaceChild(svg, div.firstElementChild);
+}
+
 function loadEvent ()
 {
   var gtoken= window.location.hash.substring(1, 9);
@@ -119,8 +123,7 @@ function loadEvent ()
     h1.textContent= event["name"]
 
     for (i = 0; i < guests.length; i++) {
-      console.log(i)
-      
+
       var tr= document.createElement('tr');
 
       var tname=document.createElement('td');
