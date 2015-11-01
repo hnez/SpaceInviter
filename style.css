@@ -35,6 +35,14 @@ div.framed {
     margin: 0.5em;
 }
 
+img#loadspinner {
+    width: 1em;
+    height: 1em;
+    margin: 0 auto;
+    display: block;
+}
+
+textarea#eventdescin,
 input#eventnamein,
 input#guestnamein {
     border: none;
@@ -44,6 +52,10 @@ input#guestnamein {
     box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.6);
     width: 100%;
     margin: 0.1em;
+}
+
+textarea#eventdescin {
+    height: 6em;
 }
 
 input#eventnamein {

@@ -1,24 +1,24 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Space Inviter</title>
+    <title id="pagetitle">Space Inviter</title>
     <meta name="description" content="Invite people">
     <link rel="stylesheet" href="/style.css">
     <script src="inviter.js"></script>
+    <script src="frontend.js"></script>
+    <script src="histogram.js"></script>
   </head>
 
-  <body onload="loadEvent()">
+  <body onload="onPageLoad()">
     <div id="center">
       <h1 id="headline">Space Inviter</h1>
 
+      <div id="ddescription" class="framed">
+        <img id="loadspinner" src="/spinner.gif" />
+      </div>
+      
       <div id="dguesttab" class="framed">
         <table id="guesttab">
-          <tr>
-            <th>Name</th>
-            <th>Propability</th>
-            <th class="admin">Link</th>
-            <th class="admin">Delete</th>
-          </tr>
         </table>
       </div>
 
@@ -43,6 +43,7 @@
             </td>
             <td>
               <select id="guestpropin">
+                <option value="-1"></option>
                 <option value="1" >1&#37</option>
                 <option value="5" >5&#37</option>
                 <option value="25">25&#37</option>
@@ -53,12 +54,12 @@
               </select>
             </td>
             <td>
-              <button id="guestsend" onclick="editGuest()">
+              <button id="guestsend" onclick="onEditGuestButton()">
                 Send
               </button>
             </td>
             <td>
-              <button id="guestadd" class="admin" onclick="addGuest()">
+              <button id="guestadd" class="admin" onclick="onAddGuestButton()">
                 Add Guest
               </button>
             </td>
@@ -67,8 +68,9 @@
       </div>
       
       <div id="dadminpanel" class="admin framed">
+        <textarea id="eventdescin"></textarea>
         <input id="eventnamein" type="text"/>
-        <button id="eventsend" onclick="editEvent()">
+        <button id="eventsend" onclick="onEditEventButton()">
           Send
         </button>
       </div>

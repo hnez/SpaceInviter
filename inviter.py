@@ -13,30 +13,33 @@ class DictSQLObject(so.SQLObject):
 class Event (DictSQLObject):
     name = so.UnicodeCol()
     description = so.UnicodeCol()
-    token = so.StringCol(length=8)
 
 class Guest (DictSQLObject):
     name = so.UnicodeCol()
     admin = so.BoolCol(default=False)
     parprop = so.IntCol(default=-1)
     token = so.StringCol(length=8)
-    event = so.StringCol(length=8)
+    event = so.ForeignKey('Event')
 
 class WebApi(bo.Bottle):
     def __init__(self, dburi='sqlite:/:memory:'):
         super(WebApi, self).__init__()
 
-        self.get('/api/event/<token>', callback=self.get_event)
-        self.put('/api/event/<token>', callback=self.edit_event)
+        self.get('/api/guest/<token>', callback=self.api_get_guest)
+        self.put('/api/guest/<token>', callback=self.api_edit_guest)
+        self.post('/api/guest/<token>', callback=self.api_new_guest)
+        self.post('/api/guest', callback=self.api_new_event)
 
-        self.get('/api/guest/<token>', callback=self.get_guest)
-        self.put('/api/guest/<token>', callback=self.edit_guest)
-        self.post('/api/guest', callback=self.new_guest)
-
+        self.get('/api/guest/<token>/event', callback=self.api_get_event)
+        self.put('/api/guest/<token>/event', callback=self.api_edit_event)
+        
         self.get('/', callback=self.get_static('index.html'))
         self.get('/event', callback=self.get_static('event.html'))
         self.get('/inviter.js', callback=self.get_static('inviter.js'))
+        self.get('/histogram.js', callback=self.get_static('histogram.js'))
+        self.get('/frontend.js', callback=self.get_static('frontend.js'))
         self.get('/style.css', callback=self.get_static('style.css'))
+        self.get('/spinner.gif', callback=self.get_static('spinner.gif'))
 
         self.db= so.connectionForURI(dburi)
         #Event.createTable(connection=self.db)
@@ -47,31 +50,31 @@ class WebApi(bo.Bottle):
 
         return (s)
 
-    def event_by_token (self, etoken):
-        event= [g for g in  Event.selectBy(self.db, token=etoken)]
-
-        if (len(event) != 1):
-            return (None)
-        else:
-            return (event[0])
-
-    def guest_by_token (self, gtoken, adminonly=False):
-        guest=None
-
-        if adminonly:
-            guest= [g for g in Guest.selectBy(self.db, token=gtoken, admin=True)]
-        else:
-            guest= [g for g in Guest.selectBy(self.db, token=gtoken)]
+    def guest_by_token (self, token):
+        guest= Guest.selectBy(self.db, token=token)
         
-        if (len(guest) != 1):
-            return (None)
-        else:
-            return (guest[0])
-        
-    def guests_by_event (self, etoken):
-        guests= [g for g in Guest.selectBy(self.db, event=etoken)]
+        return (guest.getOne(None))
+
+    def guests_by_event (self, event):
+        guests= [g for g in Guest.selectBy(self.db, event=event.id)]
 
         return (guests)
+
+    def create_guest(self, event, info):       
+        clean={}
+        clean['name']='John Doe'
+        clean['admin']=False
+        clean['parprop']=-1
+        clean['token']=self.gentoken()
+        clean['event']=event
+
+        for k in ['name', 'admin', 'parprop']:
+            if (k in info):
+                clean[k]=info[k]
+
+        guest= Guest(connection=self.db, **clean)
+
+        return(guest)
 
     def get_static(self, path):
         def file_cb ():
@@ -79,51 +82,55 @@ class WebApi(bo.Bottle):
 
         return (file_cb)
 
-    def get_event (self, token):
+    def api_get_event (self, token):
         if (len(token) != 8):
             bo.abort(404, 'invalid token')
 
         ret={}
-        event = self.event_by_token(token)
-        guests = self.guests_by_event(token)
-        
-        if (event is None):
-            bo.abort(404, 'token not found')
 
-        for k in ['token', 'name', 'description']:
+        guest= self.guest_by_token(token)
+
+        if (guest is None):
+            bo.abort(404, 'token not found')
+        
+        event= guest.event
+              
+        for k in ['name', 'description']:
             ret[k]= event[k]
 
+        guests= self.guests_by_event(event)
+            
         ret['guests']=[]
         for g in guests:
             clean={}
             for k in ['name', 'parprop', 'admin']:
                 clean[k]= g[k]
+
+            if guest.admin:
+                clean['token']= g['token']
             
             ret['guests'].append(clean)
 
         return (ret)
     
-    def edit_event(self, token):
+    def api_edit_event(self, token):
         if (len(token) != 8):
             bo.abort(404, 'invalid token')
-          
-        event = self.event_by_token(token)
-        
-        if (event is None):
+
+        guest= self.guest_by_token(token)
+
+        if (guest is None):
             bo.abort(404, 'token not found')
+        
+        event= guest.event
 
         if (bo.request.json is None):
             bo.abort(400, 'request not json encoded')
             
         req= bo.request.json
 
-        if (('auth' not in req) or (len(req['auth']) != 8)):
-            bo.arbort(403, 'auth field required')
-
-        admin = self.guest_by_token(req['auth'], True)
-
-        if (admin is None):
-            bo.arbort(403, 'authentification failed')
+        if (not guest.admin):
+            bo.abort(403, 'authentification failed')
 
         for k in ['name', 'description']:
             if (k in req):
@@ -131,7 +138,7 @@ class WebApi(bo.Bottle):
 
         bo.response.status= 204
 
-    def get_guest(self, token):
+    def api_get_guest(self, token):
         if (len(token) != 8):
             bo.abort(404, 'invalid token')
           
@@ -141,12 +148,12 @@ class WebApi(bo.Bottle):
             bo.abort(404, 'token not found')
 
         ret = {}
-        for k in ['token', 'name', 'parprop', 'admin', 'event']:
+        for k in ['token', 'name', 'parprop', 'admin']:
             ret[k]= guest[k]
 
         return (ret)
 
-    def edit_guest(self, token):
+    def api_edit_guest(self, token):
         if (len(token) != 8):
             bo.abort(404, 'invalid token')
           
@@ -165,42 +172,44 @@ class WebApi(bo.Bottle):
                 guest[k]=req[k]
 
         bo.response.status= 204
-
-    def new_guest(self):
+        
+    def api_new_event(self):
         if (bo.request.json is None):
             bo.abort(400, 'request not json encoded')
-
+            
         req= bo.request.json
-        token= self.gentoken()
 
-        opts= {}
+        info={}
+        info['name']='New Event'
+        info['description']='Please edit your description'
+        event= Event(connection=self.db, **info)
+
+        guest= self.create_guest(event, req)
+
+        bo.redirect('/api/guest/' + guest.token, 201)
         
-        if ('event' in req):
-            opts['event'] = req['event'][:8]
-            opts['admin'] = False
-        else:
-            etoken = self.gentoken()
+    def api_new_guest(self, token):
+        if (len(token) != 8):
+            bo.abort(404, 'invalid token')
 
-            event=Event(
-                connection= self.db,
-                name='New Event',
-                description='Enter a description',
-                token=etoken)
+        guest= self.guest_by_token(token)
 
-            opts['event'] = etoken
-            opts['admin'] = True
+        if (guest is None):
+            bo.abort(404, 'token not found')
+        
+        event= guest.event
 
-        if('name' in req):
-            opts['name'] = req['name']
-        else:
-            opts['name'] = 'John Doe'
+        if (bo.request.json is None):
+            bo.abort(400, 'request not json encoded')
+            
+        req= bo.request.json
 
-        opts['token'] = token
-        opts['parprop'] = -1
+        if (not guest.admin):
+            bo.abort(403, 'authentification failed')
 
-        guest= Guest(connection= self.db, **opts)
-
-        bo.redirect('/api/guest/' + token, 201)
+        newg= self.create_guest(event, req)
+                   
+        bo.redirect('/api/guest/' + newg.token, 201)
         
 app = WebApi("sqlite:///media/Pastebin/test.db")
 app.run(host='localhost', port=8080)

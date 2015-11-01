@@ -1,243 +1,118 @@
-var event={}
-var guest={}
 
-function convDist(props)
+function ivGetInfo(url, cb)
 {
-  var dist=[1];
-
-  for (i=0;i<props.length;i++) {
-    var cur=[];
-
-    for(j=0;j<=dist.length;j++) {
-      cur[j]= (j>=1 ? dist[j-1] : 0)*props[i]
-        +(j<dist.length ? dist[j] : 0)*(1-props[i]);
-    }
-
-    dist=cur;
-  }
-
-  return (dist);
-}
-
-function genDistSVG (props)
-{
-  var ns= 'http://www.w3.org/2000/svg'
-
-  function line (x1, y1, x2, y2, color) {
-    var line= document.createElementNS(ns, 'line');
-
-    line.setAttribute('x1',  x1 + '%');
-    line.setAttribute('x2',  x2 + '%');
-    
-    line.setAttribute('y1',  y1 + '%');
-    line.setAttribute('y2',  y2 + '%');
-
-    line.setAttribute('stroke', color);
-    line.setAttribute('stroke-width', '1');
-
-    return (line);
-  }
-
-  function text(xp, yp, txt) {
-    var text= document.createElementNS(ns, 'text');
-
-    text.setAttribute('x', xp + '%');
-    text.setAttribute('y', yp + '%');
-    text.setAttribute('fill', 'grey');
-
-    text.setAttribute('alignment-baseline', 'middle');
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('font-size', '0.7em');
-    
-    text.appendChild(document.createTextNode(txt));
-    
-    return (text);
-  }
+  var xhr= new XMLHttpRequest();
   
-  var svg= document.createElementNS(ns, 'svg');
-  svg.setAttribute('id', 'histogram');
-  svg.appendChild(line(2, 10,  2, 90, 'grey'));
-  svg.appendChild(line(2, 90, 98, 90, 'grey'));
-
-  var dist= convDist(props);
-  var num= props.length;
-  var maxp=0;
-
-  for (var i=0; i<=num; i++) {
-    if (dist[i]>maxp) maxp=dist[i];
-  }
-  
-  for (var i=0; i<num; i++) {
-    var x1=(i/num)*96+2;
-    var x2=((i+1)/num)*96+2;
-
-    var y1=90 - dist[i]/maxp * 80;
-    var y2=90 - dist[i+1]/maxp * 80;
-
-    var lne= line(x1, y1, x2, y2, 'blue');
-
-    svg.appendChild(lne);
-  }
-
-  for (var i=0; i<=num; i++) {
-    var xp=(i/num)*96+2;
-
-    var txt= text(xp, 97.5, i);
-
-    svg.appendChild(txt);
-  }
-
-
-  return (svg)
-}
-
-function updateHistogram (props)
-{
-  var div= document.getElementById('dhistogram');
-  var svg= genDistSVG(props);
-  
-  div.replaceChild(svg, div.firstElementChild);
-}
-
-function loadEvent ()
-{
-  var gtoken= window.location.hash.substring(1, 9);
-  var gurl= "/api/guest/" + gtoken;
-  
-  var greq= new XMLHttpRequest();
-  var ereq= new XMLHttpRequest();
-
-
-  
-  function onEventDLStep ()
-  {
-    if (ereq.readyState != 4) return;    
-    if (ereq.status != 200) return;
-    
-    event = JSON.parse(ereq.responseText);
-
-    var h1= document.getElementById("headline")
-    var table= document.getElementById("guesttab")
-    var guests= event["guests"]
-    
-    h1.textContent= event["name"]
-
-    for (i = 0; i < guests.length; i++) {
-
-      var tr= document.createElement('tr');
-
-      var tname=document.createElement('td');
-      var tprop=document.createElement('td');
-      var tlink=document.createElement('td');
-      var tdel= document.createElement('td');
-
-      tlink.setAttribute('class', 'admin');
-      tdel.setAttribute('class', 'admin');
+  xhr.onreadystatechange= function() {
+    if (xhr.readyState == 4) {
       
-      tr.appendChild(tname);
-      tr.appendChild(tprop);
-      tr.appendChild(tlink);
-      tr.appendChild(tdel);
+      if(xhr.status != 200) {
+        console.warn('server request failed');
+        return;
+      }
 
-      tname.appendChild(document.createTextNode(guests[i]["name"]));
-      tprop.appendChild(document.createTextNode(guests[i]["parprop"]));
-      tlink.appendChild(document.createTextNode("link"));
-      tdel.appendChild(document.createTextNode("del"));
+      if (xhr.getResponseHeader('Content-Type') !=
+          'application/json') {
+        console.warn('response is not json encoded');
+        return;
+      }
 
-      table.appendChild(tr);
+      if(cb) {
+        cb(JSON.parse(xhr.responseText));
+      }
     }
-  }
+  };
   
-  function onGuestDLStep ()
-  {
-    if (greq.readyState != 4) return;    
-    if (greq.status != 200) return;
-    
-    guest = JSON.parse(greq.responseText);
-    var etoken= guest["event"]
+  xhr.open('GET', url, true);
+  xhr.send();
+}
 
-
-    var eurl= "/api/event/" + etoken;
-    
-    ereq.onreadystatechange = onEventDLStep;
-
-    ereq.open("GET", eurl, true);
-    ereq.send();
-  }
+function ivSetInfo(url, info, cb)
+{
+  var xhr= new XMLHttpRequest();
   
-  greq.onreadystatechange = onGuestDLStep;
+  xhr.onreadystatechange= function() {
+    if (xhr.readyState == 4) {
+      
+      if(xhr.status != 204) {
+        console.warn('server request failed');
+        return;
+      }
 
-  greq.open("GET", gurl, true);
-  greq.send();
+      if(cb) {
+        cb();
+      }
+    }
+  };
+  
+  xhr.open('PUT', url, true);
+  xhr.setRequestHeader ('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(info));
 }
 
-function editGuest()
+function ivCreate(url, info, cb)
 {
-    var command= {};
-    var namefield= document.getElementById("guestnamein");
-    var propfield= document.getElementById("guestpropin");
-    var gtoken= guest["token"]
-    
-    command["name"]= namefield.value;
-    command["parprop"]= parseInt(propfield.value);
+  var xhr= new XMLHttpRequest();
+  
+  xhr.onreadystatechange= function() {
+    if (xhr.readyState == 4) {
+      
+      if(xhr.status != 201) {
+        console.warn('server request failed');
+        return;
+      }
 
-    var req= new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        // TODO: everything
+      var location = xhr.getResponseHeader('Location');
+      
+      if(cb) {
+        cb(location);
+      }
     }
-
-    req.open("PUT", "/api/guest/" + gtoken, true);
-    req.setRequestHeader ('Content-Type', 'application/json');
-    req.send(JSON.stringify(command))
+  };
+  
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader ('Content-Type', 'application/json');
+  xhr.send(JSON.stringify(info));
 }
 
-function addGuest()
+function ivGetEventInfo(token, cb)
 {
-    var command= {};
-    command["event"]= event["token"]
-    command["auth"]= guest["token"]
-    
-    var req= new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        // TODO: everything
-    }
+  var url= '/api/guest/' + token + '/event';
 
-    req.open("POST", "/api/guest", true);
-    req.setRequestHeader ('Content-Type', 'application/json');
-    req.send(JSON.stringify(command))
+  ivGetInfo(url, cb);
 }
 
-function editEvent()
+function ivGetMyInfo(token, cb)
 {
-    var command= {};
-    command["event"]= event["token"]
-    command["auth"]= guest["token"]
+  var url= '/api/guest/' + token;
 
-    var etoken= event["token"]
-    var namefield= document.getElementById("eventnamein");
-    
-    command["name"]= namefield.value
-    
-    var req= new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        // TODO: everything
-    }
-
-    req.open("PUT", "/api/event/" + etoken, true);
-    req.setRequestHeader ('Content-Type', 'application/json');
-    req.send(JSON.stringify(command))
+  ivGetInfo(url, cb);
 }
 
-function newEvent()
+function ivSetEventInfo(token, info, cb)
 {
-    var command= {};
-    
-    var req= new XMLHttpRequest();
-    req.onreadystatechange = function () {
-        // TODO: everything
-    }
+  var url= '/api/guest/' + token + '/event';
 
-    req.open("POST", "/api/guest", true);
-    req.setRequestHeader ('Content-Type', 'application/json');
-    req.send(JSON.stringify(command))
+  ivSetInfo(url, info, cb);
+}
+
+function ivSetMyInfo(token, info, cb)
+{
+  var url= '/api/guest/' + token;
+
+  ivSetInfo(url, info, cb);
+}
+
+function ivCreateGuest(token, info, cb)
+{
+  var url= '/api/guest/' + token;
+
+  ivCreate(url, info, cb);
+}
+
+function ivCreateEvent(info, cb)
+{
+  var url= '/api/guest';
+
+  ivCreate(url, info, cb);
 }
