@@ -146,10 +146,12 @@ class WebApi(bo.Bottle):
             for k in ['name', 'parprop', 'admin']:
                 clean[k]= g[k]
 
-            if guest.admin:
+            if (guest.admin):
                 clean['token']= g['token']
-            
-            ret['guests'].append(clean)
+                ret['guests'].append(clean)
+                
+            elif (g['parprop'] > 0):
+                ret['guests'].append(clean)
 
         return (ret)
     
