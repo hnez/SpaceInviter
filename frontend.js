@@ -68,8 +68,6 @@ function updateGuestList(guests)
 function reloadMyInfo()
 {
   function onReceiveMyInfo(guest) {
-    console.log(guest);
-
     var namein= document.getElementById('guestnamein');
     var propin= document.getElementById('guestpropin');
     
@@ -85,6 +83,40 @@ function reloadMyInfo()
   var token= window.location.hash.substring(1);
 
   ivGetMyInfo(token, onReceiveMyInfo);
+}
+
+function reloadChatMessages()
+{
+  function onReceiveMessages(ret) {
+    var msgs= ret['msgs'];
+
+    var div= document.createElement('div');
+    div.setAttribute('id', 'dchatmessages');
+    
+    for (var m in msgs) {
+      var p= document.createElement('p');
+
+      var line= msgs[m].author + ': ' + msgs[m].content;
+      
+      p.textContent= line;
+
+      div.appendChild(p);
+    }
+
+    var olddiv= document.getElementById('dchatmessages');
+
+    var oldHeight= olddiv.scrollHeight;
+    
+    olddiv.parentElement.replaceChild(div, olddiv);
+
+    if(oldHeight != div.scrollHeight) {
+      div.scrollTop= div.scrollHeight;
+    }
+  }
+
+  var token= window.location.hash.substring(1);
+
+  ivGetMessages(token, onReceiveMessages);
 }
 
 function reloadEventInfo()
@@ -140,6 +172,9 @@ function onPageLoad()
 {
   reloadMyInfo();
   reloadEventInfo();
+  reloadChatMessages();
+
+  setInterval(reloadChatMessages, 10000);
 }
 
 function onEditGuestButton()
@@ -159,6 +194,24 @@ function onEditGuestButton()
   
   ivSetMyInfo(token, info, onGuestEdited);
 }
+
+function onChatMsgButton()
+{
+  function onMessageAdded(loc) {
+    reloadChatMessages();
+  }
+  
+  var token= window.location.hash.substring(1);
+  var msgin= document.getElementById('chatmsgin');
+  
+  var info={};
+  
+  info['content']= msgin.value;
+  msgin.value='';
+  
+  ivCreateMsg(token, info, onMessageAdded);
+}
+
 
 function onAddGuestButton()
 {

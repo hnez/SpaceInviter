@@ -77,42 +77,63 @@ function ivCreate(url, info, cb)
 
 function ivGetEventInfo(token, cb)
 {
-  var url= '/api/guest/' + token + '/event';
+  var url= '/api/token/' + token + '/event';
 
   ivGetInfo(url, cb);
 }
 
 function ivGetMyInfo(token, cb)
 {
-  var url= '/api/guest/' + token;
+  var url= '/api/token/' + token;
 
   ivGetInfo(url, cb);
 }
 
 function ivSetEventInfo(token, info, cb)
 {
-  var url= '/api/guest/' + token + '/event';
+  var url= '/api/token/' + token + '/event';
 
   ivSetInfo(url, info, cb);
 }
 
 function ivSetMyInfo(token, info, cb)
 {
-  var url= '/api/guest/' + token;
+  var url= '/api/token/' + token;
 
   ivSetInfo(url, info, cb);
 }
 
 function ivCreateGuest(token, info, cb)
 {
-  var url= '/api/guest/' + token;
+  var url= '/api/token/' + token;
 
   ivCreate(url, info, cb);
 }
 
 function ivCreateEvent(info, cb)
 {
-  var url= '/api/guest';
+  var url= '/api/token';
 
   ivCreate(url, info, cb);
+}
+
+function ivGetMessages(token, cb)
+{
+  var url= '/api/token/' + token + '/chat';
+
+  ivGetInfo(url, cb);
+}
+
+function ivCreateMsg(token, info, cb)
+{
+  var url= '/api/token/' + token + '/chat';
+
+  ivCreate(url, info, cb);
+}
+
+function ivEditMsg(token, msgid, info, cb)
+{
+  var url= '/api/token/' + token + '/chat/' + msgid;
+
+  ivSetInfo(url, info, cb);
 }

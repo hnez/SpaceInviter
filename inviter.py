@@ -21,17 +21,29 @@ class Guest (DictSQLObject):
     token = so.StringCol(length=8)
     event = so.ForeignKey('Event')
 
+class ChatMsg (DictSQLObject):
+    guest = so.ForeignKey('Guest')
+    event = so.ForeignKey('Event')
+    content = so.UnicodeCol()
+    msgid= so.StringCol(length=8)
+    
 class WebApi(bo.Bottle):
     def __init__(self, dburi='sqlite:/:memory:'):
         super(WebApi, self).__init__()
 
-        self.get('/api/guest/<token>', callback=self.api_get_guest)
-        self.put('/api/guest/<token>', callback=self.api_edit_guest)
-        self.post('/api/guest/<token>', callback=self.api_new_guest)
-        self.post('/api/guest', callback=self.api_new_event)
+        self.get('/api/token/<token>', callback=self.api_get_guest)
+        self.put('/api/token/<token>', callback=self.api_edit_guest)
+        self.post('/api/token/<token>', callback=self.api_new_guest)
+        self.post('/api/token', callback=self.api_new_event)
 
-        self.get('/api/guest/<token>/event', callback=self.api_get_event)
-        self.put('/api/guest/<token>/event', callback=self.api_edit_event)
+        self.get('/api/token/<token>/event', callback=self.api_get_event)
+        self.put('/api/token/<token>/event', callback=self.api_edit_event)
+
+        self.get('/api/token/<token>/chat', callback=self.api_get_chat)
+        self.post('/api/token/<token>/chat', callback=self.api_new_message)
+        self.get('/api/token/<token>/chat/<msgid>', callback=self.api_get_message)
+        self.put('/api/token/<token>/chat/<msgid>', callback=self.api_edit_message)
+        self.delete('/api/token/<token>/chat/<msgid>', callback=self.api_del_message)
         
         self.get('/', callback=self.get_static('index.html'))
         self.get('/event', callback=self.get_static('event.html'))
@@ -42,8 +54,9 @@ class WebApi(bo.Bottle):
         self.get('/spinner.gif', callback=self.get_static('spinner.gif'))
 
         self.db= so.connectionForURI(dburi)
-        #Event.createTable(connection=self.db)
-        #Guest.createTable(connection=self.db)
+        Event.createTable(True,connection=self.db)
+        Guest.createTable(True,connection=self.db)
+        ChatMsg.createTable(True, connection=self.db)
         
     def gentoken (self):
         s=''.join([random.choice(string.lowercase) for i in range(8)])
@@ -60,6 +73,17 @@ class WebApi(bo.Bottle):
 
         return (guests)
 
+    def chats_by_event (self, event):
+        chats= [c for c in ChatMsg.selectBy(self.db, event=event.id)]
+
+        return (chats)
+
+    def msg_by_msgid (self, msgid):
+        msg= ChatMsg.selectBy(self.db, msgid=msgid)
+        
+        return (msg.getOne(None))
+
+    
     def create_guest(self, event, info):       
         clean={}
         clean['name']='John Doe'
@@ -75,6 +99,22 @@ class WebApi(bo.Bottle):
         guest= Guest(connection=self.db, **clean)
 
         return(guest)
+
+    def create_message(self, guest, info):       
+        clean={}
+
+        clean['content']=''
+        clean['msgid']= self.gentoken()
+        clean['event']= guest.event
+        clean['guest']= guest
+
+        for k in ['content']:
+            if (k in info):
+                clean[k]=info[k]
+
+        msg= ChatMsg(connection=self.db, **clean)
+
+        return(msg)
 
     def get_static(self, path):
         def file_cb ():
@@ -186,7 +226,7 @@ class WebApi(bo.Bottle):
 
         guest= self.create_guest(event, req)
 
-        bo.redirect('/api/guest/' + guest.token, 201)
+        bo.redirect('/api/token/' + guest.token, 201)
         
     def api_new_guest(self, token):
         if (len(token) != 8):
@@ -209,7 +249,95 @@ class WebApi(bo.Bottle):
 
         newg= self.create_guest(event, req)
                    
-        bo.redirect('/api/guest/' + newg.token, 201)
+        bo.redirect('/api/token/' + newg.token, 201)
+
+    def api_get_chat(self, token):
+        if (len(token) != 8):
+            bo.abort(404, 'invalid token')
+
+        guest= self.guest_by_token(token)
+
+        if (guest is None):
+            bo.abort(404, 'token not found')
+        
+        event= guest.event
+
+        msgs= self.chats_by_event(event)
+        
+        ret={}
+        ret['msgs']= []
+
+        for m in msgs:
+            clean={}
+
+            for k in ['content', 'msgid']:
+                clean[k]= m[k]
+
+            clean['author']= m.guest.name
+
+            ret['msgs'].append(clean)
+
+        return (ret)
+            
+    def api_new_message(self, token):
+        if (len(token) != 8):
+            bo.abort(404, 'invalid token')
+
+        guest= self.guest_by_token(token)
+
+        if (guest is None):
+            bo.abort(404, 'token not found')
+        
+        event= guest.event
+
+        if (bo.request.json is None):
+            bo.abort(400, 'request not json encoded')
+            
+        req= bo.request.json
+
+        newm= self.create_message(guest, req)
+
+        link= '/api/token/' + guest.token + '/chat/' + newm.msgid
+        bo.redirect(link, 201)
+
+    def api_get_message(self, token, msgid):
+        bo.abort(501, 'me much lazy')
+
+    def api_edit_message(self, token, msgid):
+        if (len(token) != 8):
+            bo.abort(404, 'invalid token')
+
+        if (len(msgid) != 8):
+            bo.abort(404, 'invalid msgid')
+
+        guest= self.guest_by_token(token)
+        msg= self.msg_bs_msgid(msgid)
+
+        if (guest is None):
+            bo.abort(404, 'token not found')
+
+        if (msg is None):
+            bo.abort(404, 'msgid not found')
+            
+        event= guest.event
+
+        if (bo.request.json is None):
+            bo.abort(400, 'request not json encoded')
+            
+        req= bo.request.json
+
+        if (not (guest.admin or msg.guest==guest)):
+            bo.abort(403, 'authentification failed')
+
+        for k in ['content']:
+            if k in req:
+                msg[k]=req[k]
+
+        bo.response.status= 204
+
+    def api_del_message(self, token, msgid):
+        bo.abort(501, 'me much lazy')
+
         
 app = WebApi("sqlite:///media/Pastebin/test.db")
 app.run(host='localhost', port=8080)
