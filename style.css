@@ -11,6 +11,14 @@ table {
     width: 100%;
 }
 
+tr:hover {
+    background-color: rgba(0,0,0,0.05);
+}
+
+tr {
+    transition: background 0.5s;
+}
+
 th {
     text-align: left;
     font-weight: normal;
