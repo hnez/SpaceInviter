@@ -155,7 +155,11 @@ function reloadEventInfo()
       var p= document.createElement('p');
 
       p.textContent= desclines[lne];
-      
+
+      if(desclines[lne] == '.') {
+        p.style.visibility='hidden';
+      }
+
       div.appendChild(p);
     }
 
