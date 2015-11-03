@@ -90,28 +90,32 @@ function reloadChatMessages()
   function onReceiveMessages(ret) {
     var msgs= ret['msgs'];
 
-    var div= document.createElement('div');
-    div.setAttribute('id', 'dchatmessages');
-    
-    for (var m in msgs) {
-      var p= document.createElement('p');
-
-      var line= msgs[m].author + ': ' + msgs[m].content;
+    // check if new messages need drawing
+    if ((msgs.length > 0) &&
+        (msgs[msgs.length-1] != reloadChatMessages.lastMsg)) {
       
-      p.textContent= line;
+      reloadChatMessages.lastMsg= msgs[msgs.length-1];
 
-      div.appendChild(p);
+      var div= document.createElement('div');
+      div.setAttribute('id', 'dchatmessages');
+
+      for (var m in msgs) {
+        var p= document.createElement('p');
+
+        var line= msgs[m].author + ': ' + msgs[m].content;
+        
+        p.textContent= line;
+
+        div.appendChild(p);
+      }
+
+      var olddiv= document.getElementById('dchatmessages');
+      
+      olddiv.parentElement.replaceChild(div, olddiv);
+
+      // scroll to the newest messages
+      div.scrollTop= div.scrollHeight;
     }
-
-    var olddiv= document.getElementById('dchatmessages');
-
-    //var oldHeight= olddiv.scrollHeight;
-    
-    olddiv.parentElement.replaceChild(div, olddiv);
-
-    //if(oldHeight != div.scrollHeight) {
-    //  div.scrollTop= div.scrollHeight;
-    //}
   }
 
   var token= window.location.hash.substring(1);
@@ -184,7 +188,7 @@ function onPageLoad()
 
   setInterval(reloadChatMessages, 20000);
   
-  window.onhashchange= reloadComplete();
+  window.onhashchange= reloadComplete;
 }
 
 function onEditGuestButton()
