@@ -105,13 +105,13 @@ function reloadChatMessages()
 
     var olddiv= document.getElementById('dchatmessages');
 
-    var oldHeight= olddiv.scrollHeight;
+    //var oldHeight= olddiv.scrollHeight;
     
     olddiv.parentElement.replaceChild(div, olddiv);
 
-    if(oldHeight != div.scrollHeight) {
-      div.scrollTop= div.scrollHeight;
-    }
+    //if(oldHeight != div.scrollHeight) {
+    //  div.scrollTop= div.scrollHeight;
+    //}
   }
 
   var token= window.location.hash.substring(1);
@@ -122,7 +122,6 @@ function reloadChatMessages()
 function reloadEventInfo()
 {
   function onReceiveEventInfo(event) {
-    console.log(event)
     
     var guests= event.guests;
 
@@ -172,13 +171,20 @@ function reloadEventInfo()
   ivGetEventInfo(token, onReceiveEventInfo);
 }
 
-function onPageLoad()
+function reloadComplete()
 {
   reloadMyInfo();
   reloadEventInfo();
   reloadChatMessages();
+}
 
-  setInterval(reloadChatMessages, 10000);
+function onPageLoad()
+{
+  reloadComplete();
+
+  setInterval(reloadChatMessages, 20000);
+  
+  window.onhashchange= reloadComplete();
 }
 
 function onEditGuestButton()

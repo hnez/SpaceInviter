@@ -54,8 +54,8 @@ class WebApi(bo.Bottle):
         self.get('/spinner.gif', callback=self.get_static('spinner.gif'))
 
         self.db= so.connectionForURI(dburi)
-        Event.createTable(True,connection=self.db)
-        Guest.createTable(True,connection=self.db)
+        Event.createTable(True, connection=self.db)
+        Guest.createTable(True, connection=self.db)
         ChatMsg.createTable(True, connection=self.db)
         
     def gentoken (self):
@@ -74,7 +74,9 @@ class WebApi(bo.Bottle):
         return (guests)
 
     def chats_by_event (self, event):
-        chats= [c for c in ChatMsg.selectBy(self.db, event=event.id)]
+        query= ChatMsg.selectBy(self.db, event=event.id)
+
+        chats= [c for c in query.orderBy(ChatMsg.q.id)]
 
         return (chats)
 
@@ -264,7 +266,15 @@ class WebApi(bo.Bottle):
         
         event= guest.event
 
+        etag= bo.request.headers.get('If-None-Match')
+
         msgs= self.chats_by_event(event)
+        lastid= msgs[-1].msgid if len(msgs) else 'empty'
+        
+        if (etag == lastid):
+            bo.abort(304, 'not modified')
+        else:
+            bo.response.set_header('ETag', lastid)
         
         ret={}
         ret['msgs']= []
