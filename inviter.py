@@ -350,6 +350,7 @@ class WebApi(bo.Bottle):
     def api_del_message(self, token, msgid):
         bo.abort(501, 'me much lazy')
 
-        
-app = WebApi("sqlite:///media/Pastebin/test.db")
-app.run(host='localhost', port=8080)
+
+if __name__ == '__main__':
+    app = WebApi("sqlite:///media/Pastebin/test.db")
+    app.run(host='localhost', port=8080)
