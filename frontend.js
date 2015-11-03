@@ -130,7 +130,17 @@ function reloadEventInfo()
     var guests= event.guests;
 
     guests.sort(function (a,b) {
-      return (b.parprop - a.parprop);
+      if(a.parprop != b.parprop) {
+        return (b.parprop - a.parprop);
+      }
+      else {
+        if (a.name == b.name) {
+          return (0);
+        }
+        else {
+          return (a.name > b.name ? 1 : -1);
+        }
+      }
     });
     
     updateHistogram(guests);
