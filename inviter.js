@@ -1,11 +1,30 @@
+/*
+  inviter.js, low level functions to communicate
+  with the SpaceInviter server.
+
+  Copyright (C) 2015 Leonard Goehrs
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 function ivGetInfo(url, cb)
 {
   var xhr= new XMLHttpRequest();
-  
+
   xhr.onreadystatechange= function() {
     if (xhr.readyState == 4) {
-      
+
       if(xhr.status != 200) {
         console.warn('server request failed');
         return;
@@ -22,7 +41,7 @@ function ivGetInfo(url, cb)
       }
     }
   };
-  
+
   xhr.open('GET', url, true);
   xhr.send();
 }
@@ -30,10 +49,10 @@ function ivGetInfo(url, cb)
 function ivSetInfo(url, info, cb)
 {
   var xhr= new XMLHttpRequest();
-  
+
   xhr.onreadystatechange= function() {
     if (xhr.readyState == 4) {
-      
+
       if(xhr.status != 204) {
         console.warn('server request failed');
         return;
@@ -44,7 +63,7 @@ function ivSetInfo(url, info, cb)
       }
     }
   };
-  
+
   xhr.open('PUT', url, true);
   xhr.setRequestHeader ('Content-Type', 'application/json');
   xhr.send(JSON.stringify(info));
@@ -53,23 +72,23 @@ function ivSetInfo(url, info, cb)
 function ivCreate(url, info, cb)
 {
   var xhr= new XMLHttpRequest();
-  
+
   xhr.onreadystatechange= function() {
     if (xhr.readyState == 4) {
-      
+
       if(xhr.status != 201) {
         console.warn('server request failed');
         return;
       }
 
       var location = xhr.getResponseHeader('Location');
-      
+
       if(cb) {
         cb(location);
       }
     }
   };
-  
+
   xhr.open('POST', url, true);
   xhr.setRequestHeader ('Content-Type', 'application/json');
   xhr.send(JSON.stringify(info));

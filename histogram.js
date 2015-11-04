@@ -1,11 +1,49 @@
+/*
+  histogram.js, generates a svg diagram from a list
+  of propabilities.
+
+  Copyright (C) 2015 Leonard Goehrs
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 function convDist(props)
 {
+  /*
+    Build a distribution by convoluting
+    [propability, 1-propability] pairs.
+   */
+  
   var dist=[1];
 
   for (i=0;i<props.length;i++) {
     var cur=[];
 
     for(j=0;j<=dist.length;j++) {
+      /*
+        Shift the propability diagram by a
+        fractional amount and apply filtering in one step.
+
+        [  1,  0,  0,   0] ----0%-> [ 1   , 0   ,  0,   0]
+        [  1,  0,  0,   0] ---25%-> [ 0.75, 0.25,  0,   0]
+        [  1,  0,  0,   0] ---50%-> [ 0.5 , 0.5 ,  0,   0]
+        [  1,  0,  0,   0] ---75%-> [ 0.25, 0.75,  0,   0]
+        [  1,  0,  0,   0] --100%-> [ 0   , 1   ,  0,   0]
+
+        Treat out of range values as 0 for causality.
+      */
+      
       cur[j]= (j>=1 ? dist[j-1] : 0)*props[i]
         +(j<dist.length ? dist[j] : 0)*(1-props[i]);
     }
@@ -18,6 +56,11 @@ function convDist(props)
 
 function genDistSVG (props)
 {
+  /*
+    Do not use absolute positions or sizes, when they are
+    avoidable (like em or px) to allow arbitrary scaling.
+   */
+  
   var ns= 'http://www.w3.org/2000/svg'
 
   function line (x1, y1, x2, y2, color) {

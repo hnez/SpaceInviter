@@ -1,4 +1,23 @@
 <html>
+  <!--
+    SpaceInviter, a tool for organizing small events.
+
+    Copyright (C) 2015 Leonard Göhrs
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
   <head>
     <meta charset="utf-8">
     <title id="pagetitle">Space Inviter</title>
@@ -16,7 +35,7 @@
       <div id="ddescription" class="framed">
         <img id="loadspinner" src="/spinner.gif" />
       </div>
-      
+
       <div id="dguesttab" class="framed">
         <table id="guesttab">
         </table>
@@ -35,6 +54,7 @@
               <input id="guestnamein" type="text"/>
             </td>
             <td>
+              <!-- values are arbitrary and can be changed at will-->
               <select id="guestpropin">
                 <option value="-1"></option>
                 <option value="1" >1&#37</option>
@@ -79,7 +99,7 @@
           <line x1="2%" y1="90%" x2="98%" y2="90%" stroke="grey" stroke-width="1" />
         </svg>
       </div>
-      
+
       <div id="dadminpanel" class="admin framed">
         <textarea id="eventdescin"></textarea>
         <input id="eventnamein" type="text"/>

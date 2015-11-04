@@ -1,5 +1,26 @@
+/*
+  frontend.js, glue logic to interface between user interface
+  and backend functions.
+
+  Copyright (C) 2015 Leonard Goehrs
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as
+  published by the Free Software Foundation, either version 3 of the
+  License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 function updateHistogram (guests)
 {
+
   var props=[];
   var i=0;
   for (var g in guests) {
@@ -10,10 +31,10 @@ function updateHistogram (guests)
       i++;
     }
   }
-  
+
   var div= document.getElementById('dhistogram');
   var svg= genDistSVG(props);
-  
+
   div.replaceChild(svg, div.firstElementChild);
 }
 
@@ -21,10 +42,10 @@ function updateGuestList(guests)
 {
   var table= document.createElement('table');
   table.setAttribute('id', 'guesttab');
-  
+
   for (var g in guests) {
     var tr= document.createElement('tr');
-    
+
     var tname=document.createElement('td');
     var tprop=document.createElement('td');
     var tlink=document.createElement('td');
@@ -38,11 +59,11 @@ function updateGuestList(guests)
 
     if(guests[g].token) {
       var gtoken= guests[g].token;
-      
+
       alink.textContent='link'
       alink.href='/event#' + gtoken
       tlink.appendChild(alink);
-      
+
       tdel.textContent= 'remove';
       tdel.onclick=
         'onDeleteGuestButton(' + gtoken + ')';
@@ -51,7 +72,7 @@ function updateGuestList(guests)
       tlink.style.display='none';
       tdel.style.display='none'
     }
-      
+
     tr.appendChild(tname);
     tr.appendChild(tprop);
     tr.appendChild(tlink);
@@ -70,7 +91,7 @@ function reloadMyInfo()
   function onReceiveMyInfo(guest) {
     var namein= document.getElementById('guestnamein');
     var propin= document.getElementById('guestpropin');
-    
+
     namein.value= guest.name;
     propin.value= guest.parprop;
 
@@ -93,7 +114,7 @@ function reloadChatMessages()
     // check if new messages need drawing
     if ((msgs.length > 0) &&
         (msgs[msgs.length-1] != reloadChatMessages.lastMsg)) {
-      
+
       reloadChatMessages.lastMsg= msgs[msgs.length-1];
 
       var div= document.createElement('div');
@@ -103,14 +124,14 @@ function reloadChatMessages()
         var p= document.createElement('p');
 
         var line= msgs[m].author + ': ' + msgs[m].content;
-        
+
         p.textContent= line;
 
         div.appendChild(p);
       }
 
       var olddiv= document.getElementById('dchatmessages');
-      
+
       olddiv.parentElement.replaceChild(div, olddiv);
 
       // scroll to the newest messages
@@ -126,7 +147,7 @@ function reloadChatMessages()
 function reloadEventInfo()
 {
   function onReceiveEventInfo(event) {
-    
+
     var guests= event.guests;
 
     guests.sort(function (a,b) {
@@ -142,22 +163,22 @@ function reloadEventInfo()
         }
       }
     });
-    
+
     updateHistogram(guests);
     updateGuestList(guests);
 
     var headline= document.getElementById('headline');
     var pagetitle= document.getElementById('pagetitle');
-    
+
     headline.textContent= event.name;
     pagetitle.textContent= event.name;
 
     var namein= document.getElementById('eventnamein');
     var descin= document.getElementById('eventdescin');
-    
+
     namein.value= event.name;
     descin.value= event.description;
-    
+
     var desclines= event.description.split('\n');
 
     var div= document.createElement('div');
@@ -197,25 +218,25 @@ function onPageLoad()
   reloadComplete();
 
   setInterval(reloadChatMessages, 20000);
-  
+
   window.onhashchange= reloadComplete;
 }
 
 function onEditGuestButton()
-{ 
+{
   function onGuestEdited() {
     reloadEventInfo();
   }
- 
+
   var token= window.location.hash.substring(1);
   var namein= document.getElementById('guestnamein');
   var propin= document.getElementById('guestpropin');
- 
+
   var info={};
-  
+
   info['name']= namein.value;
   info['parprop']= parseInt(propin.value);
-  
+
   ivSetMyInfo(token, info, onGuestEdited);
 }
 
@@ -224,15 +245,15 @@ function onChatMsgButton()
   function onMessageAdded(loc) {
     reloadChatMessages();
   }
-  
+
   var token= window.location.hash.substring(1);
   var msgin= document.getElementById('chatmsgin');
-  
+
   var info={};
-  
+
   info['content']= msgin.value;
   msgin.value='';
-  
+
   ivCreateMsg(token, info, onMessageAdded);
 }
 
@@ -242,16 +263,16 @@ function onAddGuestButton()
   function onGuestAdded(loc) {
     reloadEventInfo();
   }
-  
+
   var token= window.location.hash.substring(1);
   var namein= document.getElementById('guestnamein');
   var propin= document.getElementById('guestpropin');
-  
+
   var info={};
-  
+
   info['name']= namein.value;
   info['parprop']= parseInt(propin.value);
-  
+
   ivCreateGuest(token, info, onGuestAdded);
 }
 
@@ -260,17 +281,17 @@ function onEditEventButton()
   function onEventEdited() {
     reloadEventInfo();
   }
- 
+
   var token= window.location.hash.substring(1);
   var namein= document.getElementById('eventnamein');
   var descin= document.getElementById('eventdescin');
-  
+
   var info={};
-  
+
   info['name']= namein.value;
   info['description']= descin.value;
-  
-  ivSetEventInfo(token, info, onEventEdited);  
+
+  ivSetEventInfo(token, info, onEventEdited);
 }
 
 function onAddEventButton()
@@ -282,7 +303,7 @@ function onAddEventButton()
 
     window.location= '/event#' + token;
   }
-  
+
   var info={};
 
   info['admin']= true;
